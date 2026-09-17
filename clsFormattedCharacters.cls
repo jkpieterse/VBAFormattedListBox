@@ -7,9 +7,28 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+'***************************************************************************
+'
+' Author:  JKP Application Development Services, info@jkp-ads.com, https://www.jkp-ads.com
+'
+' (c)2026, all rights reserved to the authors
+'
+' You are free to use and adapt the code in these modules for
+' your own purposes and to distribute as part of your overall project.
+' However all headers and copyright notices should remain intact
+'
+' You may not publish the code in these modules, for example on a web site,
+' without the explicit consent of the authors
+'***************************************************************************
+'---------------------------------------------------------------------------------------
+' File   : clsFormattedCharacters
+' Author : Jan Karel Pieterse
+' (c)    : Copyright JKP Application Development Services, all rights reserved
+' Date   : 15-Sep-26
+' Purpose: Represents one character range in one list cell, similar to Excel's Characters object.
+'---------------------------------------------------------------------------------------
 Option Explicit
 
-'Represents one character range in one list cell, similar to Excel's Characters object.
 Private moItem As clsFormattedListItem
 Private mlStart As Long
 Private mlLength As Long

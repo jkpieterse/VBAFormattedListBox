@@ -7,6 +7,26 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+'***************************************************************************
+'
+' Author:  JKP Application Development Services, info@jkp-ads.com, https://www.jkp-ads.com
+'
+' (c)2026, all rights reserved to the authors
+'
+' You are free to use and adapt the code in these modules for
+' your own purposes and to distribute as part of your overall project.
+' However all headers and copyright notices should remain intact
+'
+' You may not publish the code in these modules, for example on a web site,
+' without the explicit consent of the authors
+'***************************************************************************
+'---------------------------------------------------------------------------------------
+' File   : clsFormattedListItem
+' Author : Jan Karel Pieterse
+' (c)    : Copyright JKP Application Development Services, all rights reserved
+' Date   : 15-Sep-26
+' Purpose: Stores one list row and creates the MSForms controls that display and operate it.
+'---------------------------------------------------------------------------------------
 Option Explicit
 
 'Stores one list row and creates the MSForms controls that display and operate it.
@@ -316,7 +336,7 @@ End Sub
 
 'Repaints selection colors and the current-row border without rebuilding the row.
 Friend Sub UpdateSelectionAppearance()
-    Dim oControl As MSForms.control
+    Dim oControl As MSForms.Control
     Dim lColumn As Long
     Dim lPosition As Long
     Dim lRunMarker As Long
@@ -426,7 +446,7 @@ End Sub
 
 'Vertically centers every formatted text label within the final row height.
 Private Sub CenterRunLabels(ByVal sngTop As Single, ByVal sngHeight As Single)
-    Dim oControl As MSForms.control
+    Dim oControl As MSForms.Control
     Dim lIndex As Long
     Dim sName As String
 
@@ -602,3 +622,5 @@ Private Sub Class_Terminate()
     Set moFocusProxy = Nothing
     Set moList = Nothing
 End Sub
+
+

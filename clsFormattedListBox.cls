@@ -7,6 +7,26 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+'***************************************************************************
+'
+' Author:  JKP Application Development Services, info@jkp-ads.com, https://www.jkp-ads.com
+'
+' (c)2026, all rights reserved to the authors
+'
+' You are free to use and adapt the code in these modules for
+' your own purposes and to distribute as part of your overall project.
+' However all headers and copyright notices should remain intact
+'
+' You may not publish the code in these modules, for example on a web site,
+' without the explicit consent of the authors
+'***************************************************************************
+'---------------------------------------------------------------------------------------
+' File   : clsFormattedListBox
+' Author : Jan Karel Pieterse
+' (c)    : Copyright JKP Application Development Services, all rights reserved
+' Date   : 15-Sep-26
+' Purpose: Provides a ListBox-style control inside an MSForms Frame, with character formatting.
+'---------------------------------------------------------------------------------------
 Option Explicit
 
 'Provides a ListBox-style control inside an MSForms Frame, with character formatting.
@@ -712,3 +732,5 @@ Private Sub Class_Terminate()
     Terminate
     On Error GoTo 0
 End Sub
+
+
