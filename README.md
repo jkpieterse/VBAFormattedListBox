@@ -2,7 +2,7 @@
 
 (c)2026, Copyright JKP Application Development Services, all rights reserved
 
-An all-VBA list box control for MSForms `UserForm`s that supports per-character text
+An all-VBA list box control for MSForms `UserForms` that supports per-character text
 formatting (bold, italic, underline, strikethrough, font, size, color) similar to
 Excel's `Range.Characters` object — something the native `MSForms.ListBox` cannot do.
 
