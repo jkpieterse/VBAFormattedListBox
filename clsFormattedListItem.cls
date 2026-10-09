@@ -21,11 +21,12 @@ Attribute VB_Exposed = False
 ' without the explicit consent of the authors
 '***************************************************************************
 '---------------------------------------------------------------------------------------
-' File   : clsFormattedListItem
-' Author : Jan Karel Pieterse
-' (c)    : Copyright JKP Application Development Services, all rights reserved
-' Date   : 15-Sep-26
-' Purpose: Stores one list row and creates the MSForms controls that display and operate it.
+' File    : clsFormattedListItem
+' Author  : Jan Karel Pieterse
+' (c)     : Copyright JKP Application Development Services, all rights reserved
+' Date    : 15-Sep-26
+' Version : 1.1
+' Purpose : Stores one list row and creates the MSForms controls that display and operate it.
 '---------------------------------------------------------------------------------------
 Option Explicit
 
@@ -52,12 +53,9 @@ Private mlColumnCount As Long
 Private mlFormatColumns As Long
 Private mlFormatLength As Long
 Private mcolControlNames As Collection
-Private WithEvents moHitTarget As MSForms.Label
+Private WithEvents moHitTarget As MSForms.label
 Attribute moHitTarget.VB_VarHelpID = -1
-Private WithEvents moFocusProxy As MSForms.TextBox
-Attribute moFocusProxy.VB_VarHelpID = -1
 Private miMouseShift As Integer
-Private msngTop As Single
 
 'Connects a new item to its list and prepares storage for all columns.
 Friend Sub Initialize(ByVal oList As clsFormattedListBox, ByVal lIndex As Long, _
@@ -217,9 +215,9 @@ End Sub
 
 'Builds the row's background, formatted text labels and mouse surface in the host Frame.
 Friend Function Render(ByVal sngTop As Single) As Single
-    Dim oHost As MSForms.Frame
-    Dim oBack As MSForms.Label
-    Dim oRun As MSForms.Label
+    Dim oHost As MSForms.frame
+    Dim oBack As MSForms.label
+    Dim oRun As MSForms.label
     Dim lColumn As Long
     Dim lStart As Long
     Dim lEnd As Long
@@ -231,7 +229,6 @@ Friend Function Render(ByVal sngTop As Single) As Single
     Dim sName As String
     Dim sText As String
 
-    msngTop = sngTop
     RemoveControls
     Set oHost = moList.HostFrame
     Set mcolControlNames = New Collection
@@ -276,7 +273,7 @@ Friend Function Render(ByVal sngTop As Single) As Single
                 Set oRun = oHost.Controls.Add("Forms.Label.1", sName, False)
                 TrackControl sName
                 With oRun
-                    .Caption = Mid$(sText, lStart, lEnd - lStart + 1)
+                    .Caption = mid$(sText, lStart, lEnd - lStart + 1)
                     .WordWrap = False
                     ApplyRunFormat oRun, lColumn, lStart
                     .AutoSize = True
@@ -305,38 +302,9 @@ Friend Function Render(ByVal sngTop As Single) As Single
     Render = sngRowHeight
 End Function
 
-'Creates the hidden keyboard control when needed and moves focus into this item.
-Friend Sub ActivateFocus()
-    Dim oHost As MSForms.Frame
-    Dim sName As String
-
-    If moFocusProxy Is Nothing Then
-        Set oHost = moList.HostFrame
-        sName = ControlName("Focus")
-        Set moFocusProxy = oHost.Controls.Add("Forms.TextBox.1", sName, False)
-        TrackControl sName
-        With moFocusProxy
-            .Left = moList.Padding
-            .Top = msngTop
-            .Width = 0.1
-            .Height = 0.1
-            .BorderStyle = fmBorderStyleNone
-            .Locked = True
-            .TabStop = False
-            .Visible = True
-            .ZOrder 1
-        End With
-    End If
-    ' Keep the proxy aligned with the row so SetFocus doesn't force the Frame to scroll to Top=0.
-    moFocusProxy.Top = msngTop
-    On Error Resume Next
-    moFocusProxy.SetFocus
-    On Error GoTo 0
-End Sub
-
 'Repaints selection colors and the current-row border without rebuilding the row.
 Friend Sub UpdateSelectionAppearance()
-    Dim oControl As MSForms.Control
+    Dim oControl As MSForms.control
     Dim lColumn As Long
     Dim lPosition As Long
     Dim lRunMarker As Long
@@ -360,7 +328,7 @@ Friend Sub UpdateSelectionAppearance()
         Else
             lRunMarker = InStr(1, sName, "_Run", vbBinaryCompare)
             If lRunMarker > 0 Then
-                sRun = Mid$(sName, lRunMarker + 4)
+                sRun = mid$(sName, lRunMarker + 4)
                 vParts = Split(sRun, "_")
                 lColumn = CLng(vParts(0))
                 lPosition = CLng(vParts(1))
@@ -372,11 +340,10 @@ End Sub
 
 'Removes every dynamic control created for this item from the host Frame.
 Friend Sub RemoveControls()
-    Dim oHost As MSForms.Frame
+    Dim oHost As MSForms.frame
     Dim lIndex As Long
 
     Set moHitTarget = Nothing
-    Set moFocusProxy = Nothing
     If mcolControlNames Is Nothing Then Exit Sub
     If moList Is Nothing Then Exit Sub
     Set oHost = moList.HostFrame
@@ -417,16 +384,16 @@ Private Sub CreateHitTarget(ByVal sngTop As Single, ByVal sngHeight As Single)
 End Sub
 
 'Applies the stored character style or the current selection colors to one run label.
-Private Sub ApplyRunFormat(ByVal oRun As MSForms.Label, ByVal lColumn As Long, _
+Private Sub ApplyRunFormat(ByVal oRun As MSForms.label, ByVal lColumn As Long, _
                            ByVal lPosition As Long)
     Dim vFormat As Variant
 
     vFormat = CharacterFormat(lColumn, lPosition)
     With oRun
-        .Font.Name = moList.HostFrame.Font.Name
-        .Font.Size = moList.HostFrame.Font.Size
-        If Not IsEmpty(vFormat(MC_FONT_NAME)) Then .Font.Name = CStr(vFormat(MC_FONT_NAME))
-        If Not IsEmpty(vFormat(MC_FONT_SIZE)) Then .Font.Size = CSng(vFormat(MC_FONT_SIZE))
+        .Font.name = moList.HostFrame.Font.name
+        .Font.size = moList.HostFrame.Font.size
+        If Not IsEmpty(vFormat(MC_FONT_NAME)) Then .Font.name = CStr(vFormat(MC_FONT_NAME))
+        If Not IsEmpty(vFormat(MC_FONT_SIZE)) Then .Font.size = CSng(vFormat(MC_FONT_SIZE))
         If Not IsEmpty(vFormat(MC_BOLD)) Then .Font.Bold = CBool(vFormat(MC_BOLD))
         If Not IsEmpty(vFormat(MC_ITALIC)) Then .Font.Italic = CBool(vFormat(MC_ITALIC))
         If Not IsEmpty(vFormat(MC_UNDERLINE)) Then .Font.Underline = CBool(vFormat(MC_UNDERLINE))
@@ -446,7 +413,7 @@ End Sub
 
 'Vertically centers every formatted text label within the final row height.
 Private Sub CenterRunLabels(ByVal sngTop As Single, ByVal sngHeight As Single)
-    Dim oControl As MSForms.Control
+    Dim oControl As MSForms.control
     Dim lIndex As Long
     Dim sName As String
 
@@ -606,20 +573,9 @@ Private Sub moHitTarget_DblClick(ByVal Cancel As MSForms.ReturnBoolean)
     moList.ItemDblClick Me
 End Sub
 
-'Passes keyboard navigation and selection keys to the parent list.
-Private Sub moFocusProxy_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
-    moList.ItemKeyDown Me, KeyCode, Shift
-End Sub
-
-'Passes KeyUp to the parent list after its own keyboard handling finishes.
-Private Sub moFocusProxy_KeyUp(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
-    moList.ItemKeyUp Me, KeyCode, Shift
-End Sub
-
 'Releases event controls and the parent reference if explicit cleanup was missed.
 Private Sub Class_Terminate()
     Set moHitTarget = Nothing
-    Set moFocusProxy = Nothing
     Set moList = Nothing
 End Sub
 

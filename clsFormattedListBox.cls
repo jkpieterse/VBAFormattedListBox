@@ -21,11 +21,12 @@ Attribute VB_Exposed = False
 ' without the explicit consent of the authors
 '***************************************************************************
 '---------------------------------------------------------------------------------------
-' File   : clsFormattedListBox
-' Author : Jan Karel Pieterse
-' (c)    : Copyright JKP Application Development Services, all rights reserved
-' Date   : 15-Sep-26
-' Purpose: Provides a ListBox-style control inside an MSForms Frame, with character formatting.
+' File    : clsFormattedListBox
+' Author  : Jan Karel Pieterse
+' (c)     : Copyright JKP Application Development Services, all rights reserved
+' Date    : 15-Sep-26
+' Version : 1.1
+' Purpose : Provides a ListBox-style control inside an MSForms Frame, with character formatting.
 '---------------------------------------------------------------------------------------
 Option Explicit
 
@@ -33,8 +34,10 @@ Option Explicit
 Private Const MC_SHIFT_MASK As Integer = 1
 Private Const MC_CTRL_MASK As Integer = 2
 
-Private WithEvents moHostFrame As MSForms.Frame
+Private WithEvents moHostFrame As MSForms.frame
 Attribute moHostFrame.VB_VarHelpID = -1
+Private WithEvents moFocusProxy As MSForms.TextBox
+Attribute moFocusProxy.VB_VarHelpID = -1
 Private mcolItems As Collection
 Private mlColumnCount As Long
 Private msColumnWidths As String
@@ -91,10 +94,12 @@ Private Sub Class_Initialize()
 End Sub
 
 'Attaches the formatted list to the Frame that will contain its dynamic controls.
-Public Property Set HostFrame(ByVal oFrame As MSForms.Frame)
+Public Property Set HostFrame(ByVal oFrame As MSForms.frame)
     If Not moHostFrame Is Nothing Then ClearRenderedControls
+    RemoveFocusProxy
     Set moHostFrame = oFrame
     If Not moHostFrame Is Nothing Then
+        EnsureFocusProxy
         mlBackColor = moHostFrame.BackColor
         mlForeColor = moHostFrame.ForeColor
         If Len(msColumnWidths) = 0 Then msngColumnWidths(0) = MaxSingle(20, moHostFrame.InsideWidth - 2 * msngPadding)
@@ -103,7 +108,7 @@ Public Property Set HostFrame(ByVal oFrame As MSForms.Frame)
 End Property
 
 'Returns the Frame currently used to display the list.
-Public Property Get HostFrame() As MSForms.Frame
+Public Property Get HostFrame() As MSForms.frame
     Set HostFrame = moHostFrame
 End Property
 
@@ -353,6 +358,8 @@ Public Sub Refresh()
     Next oItem
     SetScrollbars sngTop + msngPadding
     mbRefreshPending = False
+    PositionFocusProxy
+    moFocusProxy.ZOrder 1
 End Sub
 
 'Redraws the list after the host Frame changes size.
@@ -366,9 +373,16 @@ End Sub
 
 'Moves keyboard focus to the current row, selecting the first row when necessary.
 Public Sub SetFocus()
-    If ListCount = 0 Then Exit Sub
-    If mlListIndex < 0 Then Me.ListIndex = 0
-    Item(mlListIndex).ActivateFocus
+    If moHostFrame Is Nothing Then Exit Sub
+    EnsureFocusProxy
+    If ListCount > 0 Then
+        If mlListIndex < 0 Then Me.ListIndex = 0
+        EnsureVisible mlListIndex
+    End If
+    PositionFocusProxy
+    On Error Resume Next
+    moFocusProxy.SetFocus
+    On Error GoTo 0
 End Sub
 
 'Adjusts vertical scrolling until the requested row is fully visible.
@@ -385,13 +399,64 @@ Public Sub EnsureVisible(ByVal lIndex As Long)
     ElseIf sngBottom > moHostFrame.ScrollTop + moHostFrame.InsideHeight Then
         moHostFrame.ScrollTop = MaxSingle(0, sngBottom - moHostFrame.InsideHeight)
     End If
+    PositionFocusProxy
 End Sub
 
 'Removes generated controls and breaks references so the UserForm can unload cleanly.
 Public Sub Terminate()
     Clear
+    RemoveFocusProxy
     Set mcolItems = Nothing
     Set moHostFrame = Nothing
+End Sub
+
+Private Sub EnsureFocusProxy()
+    If moHostFrame Is Nothing Then Exit Sub
+    If Not moFocusProxy Is Nothing Then Exit Sub
+    Set moFocusProxy = moHostFrame.Controls.Add("Forms.TextBox.1", msControlPrefix & "_Focus", False)
+    With moFocusProxy
+        .Width = 0.1
+        .Height = 0.1
+        .BorderStyle = fmBorderStyleNone
+        .BackStyle = fmBackStyleTransparent
+        .Locked = True
+        .TabStop = True
+        .TabIndex = 0
+        .Visible = True
+        .ZOrder 1
+    End With
+    PositionFocusProxy
+End Sub
+
+Private Sub PositionFocusProxy(Optional ByVal sngDeltaX As Single = 0, _
+                               Optional ByVal sngDeltaY As Single = 0)
+    If moFocusProxy Is Nothing Then Exit Sub
+    With moFocusProxy
+        .Left = MaxSingle(0, moHostFrame.ScrollLeft + sngDeltaX)
+        .Top = MaxSingle(0, moHostFrame.ScrollTop + sngDeltaY)
+        If .Left > MaxSingle(0, moHostFrame.ScrollWidth - .Width) Then
+            .Left = MaxSingle(0, moHostFrame.ScrollWidth - .Width)
+        End If
+        If .Top > MaxSingle(0, moHostFrame.ScrollHeight - .Height) Then
+            .Top = MaxSingle(0, moHostFrame.ScrollHeight - .Height)
+        End If
+    End With
+End Sub
+
+Private Sub RemoveFocusProxy()
+    Dim sName As String
+
+    If moFocusProxy Is Nothing Then Exit Sub
+    sName = moFocusProxy.name
+    Set moFocusProxy = Nothing
+    moHostFrame.Controls.Remove sName
+End Sub
+
+Private Sub moHostFrame_Scroll(ByVal ActionX As MSForms.fmScrollAction, _
+                               ByVal ActionY As MSForms.fmScrollAction, _
+                               ByVal RequestDx As Single, ByVal RequestDy As Single, _
+                               ByVal ActualDx As MSForms.ReturnSingle, ByVal ActualDy As MSForms.ReturnSingle)
+    PositionFocusProxy ActualDx, ActualDy
 End Sub
 
 'Returns the minimum height used for each list row.
@@ -527,6 +592,7 @@ Friend Sub ItemClick(ByVal oItem As clsFormattedListItem, ByVal iShift As Intege
     mlListIndex = lIndex
     UpdateSelectionAppearance
     EnsureVisible lIndex
+    SetFocus
     RaiseEvent Click(lIndex)
     RaiseEvent Change(lIndex)
 End Sub
@@ -537,14 +603,16 @@ Friend Sub ItemDblClick(ByVal oItem As clsFormattedListItem)
     RaiseEvent DblClick(mlListIndex)
 End Sub
 
-'Handles navigation and selection keys before raising the public KeyDown event.
-Friend Sub ItemKeyDown(ByVal oItem As clsFormattedListItem, _
-                       ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+Private Sub moFocusProxy_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
     Dim lTarget As Long
     Dim lPageSize As Long
     Dim bMove As Boolean
 
-    lTarget = oItem.Index
+    If ListCount = 0 Then
+        RaiseEvent KeyDown(mlListIndex, KeyCode, Shift)
+        Exit Sub
+    End If
+    lTarget = mlListIndex
     lPageSize = MaxLong(1, Int(moHostFrame.InsideHeight / msngRowHeight) - 1)
     Select Case KeyCode
     Case vbKeyUp
@@ -558,25 +626,29 @@ Friend Sub ItemKeyDown(ByVal oItem As clsFormattedListItem, _
     Case vbKeyPageUp
         lTarget = MaxLong(0, lTarget - lPageSize): bMove = True
     Case vbKeyPageDown
-        lTarget = MinLong(ListCount - 1, lTarget + lPageSize): bMove = True
+        If lTarget < 0 Then
+            lTarget = 0
+        Else
+            lTarget = MinLong(ListCount - 1, lTarget + lPageSize)
+        End If
+        bMove = True
     Case vbKeySpace
-        ApplyKeyboardSelection oItem.Index, Shift, True
+        mlListIndex = MaxLong(0, lTarget)
+        ApplyKeyboardSelection mlListIndex, Shift, True
+        EnsureVisible mlListIndex
     End Select
 
     If bMove Then
         mlListIndex = lTarget
         ApplyKeyboardSelection lTarget, Shift, False
         EnsureVisible lTarget
-        Item(lTarget).ActivateFocus
         KeyCode = 0
     End If
     RaiseEvent KeyDown(mlListIndex, KeyCode, Shift)
 End Sub
 
-'Raises the public KeyUp event for the item that currently owns keyboard focus.
-Friend Sub ItemKeyUp(ByVal oItem As clsFormattedListItem, _
-                     ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
-    RaiseEvent KeyUp(oItem.Index, KeyCode, Shift)
+Private Sub moFocusProxy_KeyUp(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+    RaiseEvent KeyUp(mlListIndex, KeyCode, Shift)
 End Sub
 
 'Updates selected rows after keyboard movement or Space, including Ctrl and Shift.
@@ -654,7 +726,7 @@ Private Sub ParseColumnWidths()
     For lColumn = 0 To mlColumnCount - 1
         If lColumn <= UBound(vWidths) Then
             sWidth = Trim$(CStr(vWidths(lColumn)))
-            msngColumnWidths(lColumn) = CSng(Val(sWidth))
+            msngColumnWidths(lColumn) = CSng(val(sWidth))
         Else
             msngColumnWidths(lColumn) = sngDefault
         End If
