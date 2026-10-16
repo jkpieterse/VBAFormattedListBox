@@ -24,8 +24,8 @@ Attribute VB_Exposed = False
 ' File    : clsFormattedListBox
 ' Author  : Jan Karel Pieterse
 ' (c)     : Copyright JKP Application Development Services, all rights reserved
-' Date    : 15-Sep-26
-' Version : 1.1
+' Date    : 16-Oct-26
+' Version : 1.2
 ' Purpose : Provides a ListBox-style control inside an MSForms Frame, with character formatting.
 '---------------------------------------------------------------------------------------
 Option Explicit
@@ -55,6 +55,7 @@ Private mlBackColor As Long
 Private mlForeColor As Long
 Private mlSelectedBackColor As Long
 Private mlSelectedForeColor As Long
+Private mbHasFocus As Boolean
 Private msControlPrefix As String
 Private msngItemTops() As Single
 Private msngItemHeights() As Single
@@ -98,6 +99,7 @@ Public Property Set HostFrame(ByVal oFrame As MSForms.frame)
     If Not moHostFrame Is Nothing Then ClearRenderedControls
     RemoveFocusProxy
     Set moHostFrame = oFrame
+    mbHasFocus = False
     If Not moHostFrame Is Nothing Then
         EnsureFocusProxy
         mlBackColor = moHostFrame.BackColor
@@ -216,18 +218,18 @@ Public Property Let Selected(ByVal lIndex As Long, ByVal bSelected As Boolean)
 End Property
 
 'Returns the current row's bound value, or Null when there is no current row.
-Public Property Get Value() As Variant
+Public Property Get value() As Variant
     If mlListIndex < 0 Then
-        Value = Null
+        value = Null
     ElseIf mlBoundColumn = 0 Then
-        Value = mlListIndex
+        value = mlListIndex
     Else
-        Value = Item(mlListIndex).Value(mlBoundColumn - 1)
+        value = Item(mlListIndex).value(mlBoundColumn - 1)
     End If
 End Property
 
 'Finds and selects the first row whose bound value matches the supplied value.
-Public Property Let Value(ByVal vValue As Variant)
+Public Property Let value(ByVal vValue As Variant)
     Dim lColumn As Long
     Dim lIndex As Long
 
@@ -237,7 +239,7 @@ Public Property Let Value(ByVal vValue As Variant)
     End If
     lColumn = mlBoundColumn - 1
     For lIndex = 0 To ListCount - 1
-        If StrComp(CStr(Item(lIndex).Value(lColumn)), CStr(vValue), vbBinaryCompare) = 0 Then
+        If StrComp(CStr(Item(lIndex).value(lColumn)), CStr(vValue), vbBinaryCompare) = 0 Then
             Me.ListIndex = lIndex
             Exit Property
         End If
@@ -247,7 +249,7 @@ End Property
 
 'Returns a value using zero-based row and column numbers, like an MSForms ListBox.
 Public Property Get List(ByVal lRow As Long, Optional ByVal lColumn As Long = 0) As Variant
-    List = Item(lRow).Value(lColumn)
+    List = Item(lRow).value(lColumn)
 End Property
 
 'Stores a value using zero-based row and column numbers and redraws the list.
@@ -419,7 +421,7 @@ Private Sub EnsureFocusProxy()
         .Height = 0.1
         .BorderStyle = fmBorderStyleNone
         .BackStyle = fmBackStyleTransparent
-        .Locked = True
+        .locked = True
         .TabStop = True
         .TabIndex = 0
         .Visible = True
@@ -540,6 +542,22 @@ Public Property Let SelectedForeColor(ByVal lColor As Long)
     RequestRefresh
 End Property
 
+Friend Property Get SelectionBackColor() As Long
+    If mbHasFocus Then
+        SelectionBackColor = mlSelectedBackColor
+    Else
+        SelectionBackColor = vbButtonFace
+    End If
+End Property
+
+Friend Property Get SelectionForeColor() As Long
+    If mbHasFocus Then
+        SelectionForeColor = mlSelectedForeColor
+    Else
+        SelectionForeColor = mlForeColor
+    End If
+End Property
+
 'Returns the total drawable row width, never narrower than the host Frame.
 Friend Property Get ContentWidth() As Single
     Dim lColumn As Long
@@ -602,6 +620,16 @@ Friend Sub ItemDblClick(ByVal oItem As clsFormattedListItem)
     mlListIndex = oItem.Index
     RaiseEvent DblClick(mlListIndex)
 End Sub
+
+Public Property Get HasFocus() As Boolean
+    HasFocus = mbHasFocus
+End Property
+
+Public Property Let HasFocus(ByVal bHasFocus As Boolean)
+    If mbHasFocus = bHasFocus Then Exit Property
+    mbHasFocus = bHasFocus
+    UpdateSelectionAppearance
+End Property
 
 Private Sub moFocusProxy_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
     Dim lTarget As Long

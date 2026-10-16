@@ -24,8 +24,8 @@ Attribute VB_Exposed = False
 ' File    : clsFormattedListItem
 ' Author  : Jan Karel Pieterse
 ' (c)     : Copyright JKP Application Development Services, all rights reserved
-' Date    : 15-Sep-26
-' Version : 1.1
+' Date    : 16-Oct-26
+' Version : 1.2
 ' Purpose : Stores one list row and creates the MSForms controls that display and operate it.
 '---------------------------------------------------------------------------------------
 Option Explicit
@@ -129,9 +129,9 @@ Friend Sub SetText(ByVal lColumn As Long, ByVal sText As String)
 End Sub
 
 'Returns a column value to the parent list without exposing internal arrays.
-Friend Property Get Value(ByVal lColumn As Long) As Variant
+Friend Property Get value(ByVal lColumn As Long) As Variant
     ValidateColumn lColumn
-    Value = msValues(lColumn)
+    value = msValues(lColumn)
 End Property
 
 'Returns an Excel-style object for formatting part or all of one cell's text.
@@ -250,7 +250,7 @@ Friend Function Render(ByVal sngTop As Single) As Single
             .BorderStyle = fmBorderStyleNone
         End If
         .BackStyle = fmBackStyleOpaque
-        .BackColor = IIf(mbSelected, moList.SelectedBackColor, moList.BackColor)
+        .BackColor = IIf(mbSelected, moList.SelectionBackColor, moList.BackColor)
         .Visible = True
         .ZOrder 1
     End With
@@ -318,7 +318,7 @@ Friend Sub UpdateSelectionAppearance()
         sName = CStr(mcolControlNames(lIndex))
         Set oControl = moList.HostFrame.Controls(sName)
         If Right$(sName, 5) = "_Back" Then
-            oControl.BackColor = IIf(mbSelected, moList.SelectedBackColor, moList.BackColor)
+            oControl.BackColor = IIf(mbSelected, moList.SelectionBackColor, moList.BackColor)
             If mlIndex = moList.ListIndex Then
                 oControl.BorderStyle = fmBorderStyleSingle
                 oControl.BorderColor = vbButtonShadow
@@ -400,7 +400,7 @@ Private Sub ApplyRunFormat(ByVal oRun As MSForms.label, ByVal lColumn As Long, _
         If Not IsEmpty(vFormat(MC_STRIKETHROUGH)) Then .Font.Strikethrough = CBool(vFormat(MC_STRIKETHROUGH))
         If Not IsEmpty(vFormat(MC_WEIGHT)) Then .Font.Weight = CInt(vFormat(MC_WEIGHT))
         If Not IsEmpty(vFormat(MC_CHARSET)) Then .Font.Charset = CInt(vFormat(MC_CHARSET))
-        .ForeColor = IIf(mbSelected, moList.SelectedForeColor, moList.ForeColor)
+        .ForeColor = IIf(mbSelected, moList.SelectionForeColor, moList.ForeColor)
         If Not mbSelected And Not IsEmpty(vFormat(MC_FORE_COLOR)) Then .ForeColor = CLng(vFormat(MC_FORE_COLOR))
         If Not mbSelected And Not IsEmpty(vFormat(MC_BACK_COLOR)) Then
             .BackStyle = fmBackStyleOpaque
